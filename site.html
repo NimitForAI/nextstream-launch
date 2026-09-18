@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b0b0f">
+<title>Next. Streaming for your television</title>
+<style>
+  :root{
+    --bg:#000; --ink:#f4f6f8; --muted:#9aa0aa; --faint:#5c626c;
+    --line:rgba(255,255,255,.1); --line-2:rgba(255,255,255,.16);
+    --card:rgba(255,255,255,.03);
+    --font:"SF Pro Display",-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --ease:cubic-bezier(.16,1,.3,1);
+    --gut:clamp(22px,5vw,64px);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    line-height:1.55;overflow-x:hidden;padding-bottom:64px}
+  a{color:inherit;text-decoration:none}
+  .sq{display:inline-block;width:.16em;height:.16em;background:var(--muted);vertical-align:baseline;margin-left:.05em}
+
+  /* ambient dot-grid ripple */
+  #grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.9}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.04;mix-blend-mode:screen;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .wrap{position:relative;z-index:2}
+  section{padding:clamp(80px,12vh,150px) var(--gut);max-width:1180px;margin:0 auto}
+
+  /* nav */
+  nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;
+    padding:18px var(--gut);transition:background .3s var(--ease),border-color .3s var(--ease),backdrop-filter .3s;
+    border-bottom:1px solid transparent}
+  nav.scrolled{background:rgba(0,0,0,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom-color:var(--line)}
+  nav .brand{font-weight:800;font-size:18px;letter-spacing:-.03em}
+  nav .links{display:flex;gap:28px;align-items:center}
+  nav .links a{font-size:13px;color:var(--muted);letter-spacing:.01em;transition:color .2s var(--ease)}
+  nav .links a:hover{color:var(--ink)}
+  .pill{display:inline-flex;align-items:center;gap:9px;padding:11px 20px;border-radius:100px;
+    background:rgba(255,255,255,.1);border:1px solid var(--line);font-size:13px;font-weight:600;letter-spacing:.02em;
+    transition:transform .2s var(--ease),background .28s var(--ease),color .28s var(--ease),border-color .28s var(--ease)}
+  .pill .arw{transition:transform .3s var(--ease)}
+  .pill:hover{background:#fff;color:#000;border-color:#fff;transform:scale(1.04)}
+  .pill:hover .arw{transform:translateX(4px)}
+  @media(max-width:720px){nav .links a:not(.pill){display:none}}
+
+  /* hero */
+  .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding-top:120px}
+  .eyebrow{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted);margin-bottom:28px}
+  .h1{font-weight:800;line-height:.98;letter-spacing:-.045em;font-size:clamp(46px,8.4vw,104px);max-width:14ch;
+    background:linear-gradient(90deg,var(--ink) 0 50%,transparent 50% 100%);background-size:200% 100%;background-position:100% 0;
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+    -webkit-text-stroke:1px var(--ink);opacity:0;animation:bootfill 1.9s var(--ease) .3s forwards,glow 5s ease-in-out 2.3s infinite}
+  @keyframes bootfill{0%{background-position:100% 0;opacity:0}14%{opacity:1}100%{background-position:0% 0;opacity:1}}
+  @keyframes glow{0%,100%{filter:drop-shadow(0 0 0 rgba(244,246,248,0))}50%{filter:drop-shadow(0 6px 34px rgba(244,246,248,.14))}}
+  .hero p{margin:28px auto 0;max-width:600px;font-size:clamp(16px,1.5vw,19px);color:#c3c8d0}
+  .hero .cta{margin-top:40px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .ghost{padding:15px 26px;border-radius:100px;border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--ink);
+    transition:border-color .25s var(--ease),transform .2s var(--ease)}
+  .ghost:hover{border-color:var(--ink);transform:translateY(-2px)}
+  .btn-primary{padding:15px 30px;border-radius:100px;background:#fff;color:#000;font-size:14px;font-weight:700;letter-spacing:.02em;
+    display:inline-flex;align-items:center;gap:9px;transition:transform .2s var(--ease)}
+  .btn-primary:hover{transform:scale(1.04)}
+  .btn-primary .arw{transition:transform .3s var(--ease)} .btn-primary:hover .arw{transform:translateX(4px)}
+
+  /* TV mock */
+  .stage{margin-top:66px;width:100%;display:flex;justify-content:center}
+  .tv{width:min(720px,100%)}
+  .tv .panel{background:#0b0b0f;border-radius:16px;padding:15px 15px 13px;border:1px solid var(--line);
+    box-shadow:0 40px 90px -40px rgba(0,0,0,.9)}
+  .screen{background:radial-gradient(120% 120% at 50% 0%,#191922 0%,#0e0e13 60%,#0a0a0e 100%);border-radius:9px;
+    aspect-ratio:16/9;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:26px}
+  .screen .q{font-size:clamp(15px,2.6vw,24px);color:#e7eaef;letter-spacing:-.01em;margin-bottom:22px}
+  .profiles{display:flex;gap:clamp(14px,3vw,30px)}
+  .profiles .p{display:flex;flex-direction:column;align-items:center;gap:9px}
+  .av{width:clamp(40px,8vw,66px);height:clamp(40px,8vw,66px);border-radius:15px;background:linear-gradient(140deg,#3a3a44,#1c1c24)}
+  .av.sel{outline:2px solid #fff;outline-offset:3px}
+  .pn{font-size:11px;color:#b9b4ab}
+  .neck{width:64px;height:14px;background:#08080b;margin:6px auto 0;border-radius:3px}
+  .base{width:120px;height:12px;background:#0b0b0f;border:1px solid var(--line);border-top:0;border-radius:0 0 7px 7px;margin:0 auto}
+
+  /* generic section header */
+  .sh{text-align:center;margin-bottom:56px}
+  .sh .eyebrow{margin-bottom:18px}
+  .sh h2{font-weight:800;letter-spacing:-.035em;font-size:clamp(30px,4.6vw,56px);line-height:1.04;max-width:18ch;margin:0 auto}
+  .sh p{margin:20px auto 0;max-width:620px;color:var(--muted);font-size:clamp(15px,1.5vw,18px)}
+
+  /* manifesto */
+  .manifesto{text-align:center}
+  .manifesto p{font-weight:600;letter-spacing:-.02em;font-size:clamp(22px,3.2vw,38px);line-height:1.28;max-width:20ch;margin:0 auto;color:var(--ink)}
+  .manifesto p .dim{color:var(--faint)}
+
+  /* feature rows */
+  .feat{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,70px);align-items:center;margin:0 auto clamp(80px,10vh,120px)}
+  .feat:last-child{margin-bottom:0}
+  .feat.flip .ftext{order:2}
+  .fnum{font-size:12px;letter-spacing:.24em;color:var(--faint);margin-bottom:16px}
+  .feat h3{font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,3vw,38px);line-height:1.06;margin-bottom:16px}
+  .feat p{color:#b7bcc4;font-size:clamp(15px,1.4vw,17px);max-width:44ch}
+  .fvis{aspect-ratio:4/3;border:1px solid var(--line);border-radius:18px;background:var(--card);
+    display:flex;align-items:center;justify-content:center;padding:26px;overflow:hidden;position:relative;min-width:0}
+  @media(max-width:760px){.feat{grid-template-columns:1fr;gap:24px}.feat.flip .ftext{order:0}.fvis{aspect-ratio:16/10}}
+
+  /* mock: audio menu */
+  .amenu{width:100%;max-width:280px;background:rgba(14,14,20,.7);border:1px solid var(--line-2);border-radius:14px;padding:8px}
+  .amenu .row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:9px;font-size:14px;color:var(--muted)}
+  .amenu .row.on{background:#fff;color:#000;font-weight:600}
+  .amenu .row .ck{opacity:0}.amenu .row.on .ck{opacity:1}
+  /* mock: subtitle frame */
+  .subf{width:100%;height:100%;border-radius:12px;background:linear-gradient(160deg,#20202a,#101014);position:relative;display:flex;align-items:flex-end;justify-content:center;padding-bottom:22px}
+  .subf .cap{background:rgba(0,0,0,.55);color:#fff;font-size:clamp(13px,1.6vw,17px);padding:6px 14px;border-radius:6px;letter-spacing:-.01em}
+  .subf .cc{position:absolute;top:14px;right:14px;font-size:10px;letter-spacing:.2em;color:var(--faint);border:1px solid var(--line);padding:4px 8px;border-radius:5px}
+  /* mock: sync */
+  .sync-m{display:flex;align-items:center;gap:22px}
+  .qr{width:96px;height:96px;border-radius:12px;background:#fff;padding:12px;flex:none}
+  .qr svg{width:100%;height:100%}
+  .sync-m .to{color:var(--faint);font-size:24px}
+  .scrs{display:flex;flex-direction:column;gap:8px}
+  .scr{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted)}
+  .scr .dot{width:7px;height:7px;border-radius:50%;background:#fff}
+  /* mock: profiles row */
+  .prow{display:flex;gap:16px}
+  .prow .p{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .prow .a{width:52px;height:52px;border-radius:13px;background:linear-gradient(140deg,#3a3a44,#1c1c24)}
+  .prow .a.sel{outline:2px solid #fff;outline-offset:3px}
+  .prow .n{font-size:10px;color:var(--muted)}
+  /* mock: play/instant */
+  .play-m{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .play-btn{width:64px;height:64px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+  .play-btn svg{width:24px;height:24px}
+  .pbar{width:180px;height:4px;border-radius:2px;background:rgba(255,255,255,.16);overflow:hidden}
+  .pbar i{display:block;height:100%;width:38%;background:#fff}
+  .play-m .lab{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+  /* mock: remote/grid */
+  .gmock{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:280px}
+  .gmock i{aspect-ratio:2/3;border-radius:6px;background:rgba(255,255,255,.06)}
+  .gmock i.f{background:#fff;outline:2px solid #fff;outline-offset:2px}
+
+  /* fixed / comparison */
+  .fixed-list{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:0}
+  .frow{display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(14px,3vw,34px);align-items:center;padding:22px 0;border-top:1px solid var(--line)}
+  .frow:last-child{border-bottom:1px solid var(--line)}
+  .frow .bad{color:var(--faint);font-size:clamp(14px,1.5vw,17px);text-align:right}
+  .frow .arr{color:var(--faint);font-size:14px}
+  .frow .good{color:var(--ink);font-weight:600;font-size:clamp(14px,1.5vw,17px)}
+  @media(max-width:640px){.frow{grid-template-columns:1fr;gap:6px;text-align:left}.frow .bad{text-align:left}.frow .arr{display:none}}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:920px;margin:0 auto}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 26px}
+  .step .n{font-weight:800;font-size:15px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  .step .n span{width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
+  .step h4{font-size:17px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+  .step p{color:var(--muted);font-size:14px}
+  .platchips{display:flex;gap:10px;justify-content:center;margin-bottom:40px}
+  .chip{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:100px;padding:8px 18px}
+  .note{text-align:center;margin-top:34px;color:var(--faint);font-size:13px}
+  @media(max-width:720px){.steps{grid-template-columns:1fr}}
+
+  /* founding cta */
+  .founding{text-align:center}
+  .whats{font-weight:800;letter-spacing:-.045em;font-size:clamp(50px,10vw,120px);line-height:.95;
+    animation:floaty 7s ease-in-out infinite}
+  .whats .sq{width:.15em;height:.15em;margin:0 .02em}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .founding .line{margin:26px auto 0;max-width:24ch;color:#c3c8d0;font-size:clamp(16px,1.6vw,20px)}
+  .count{display:flex;gap:clamp(18px,4vw,44px);justify-content:center;margin:34px 0 6px;font-variant-numeric:tabular-nums}
+  .count .u{display:flex;flex-direction:column;align-items:center;gap:9px}
+  .count .v{font-weight:800;font-size:clamp(28px,4.4vw,52px);line-height:1;letter-spacing:-.03em}
+  .count .l{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint)}
+  .founding .cta{margin-top:36px}
+  .terms-open{background:none;border:0;color:var(--faint);font-family:inherit;font-size:11px;letter-spacing:.28em;text-transform:uppercase;cursor:pointer;margin-top:30px;transition:color .25s var(--ease)}
+  .terms-open:hover{color:var(--muted)}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:clamp(56px,9vh,90px) var(--gut) 40px;max-width:1180px;margin:0 auto;text-align:center}
+  footer .big{font-weight:700;letter-spacing:-.025em;font-size:clamp(20px,2.6vw,30px);line-height:1.3;max-width:22ch;margin:0 auto 34px;color:var(--ink)}
+  footer .frow2{display:flex;align-items:center;justify-content:center;gap:26px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:30px}
+  footer .frow2 a:hover{color:var(--ink)}
+  footer .frow2 button{margin:0;padding:0;background:none;border:0;font:inherit;color:var(--muted);cursor:pointer;line-height:inherit}
+  footer .frow2 button:hover{color:var(--ink)}
+  footer .disc{max-width:640px;margin:0 auto;color:var(--faint);font-size:12px;line-height:1.7}
+  footer .mk{margin-top:26px;font-weight:800;font-size:16px;letter-spacing:-.03em;color:var(--muted)}
+
+  /* reveal */
+  .rv{opacity:0;transform:translateY(20px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+  .rv.in{opacity:1;transform:none}
+  .rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}
+
+  /* modal */
+  .modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility .3s}
+  .modal.open{opacity:1;visibility:visible}
+  .modal-scrim{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .modal-card{position:relative;z-index:1;width:min(560px,100%);max-height:82vh;overflow:auto;background:rgba(16,17,22,.94);border:1px solid var(--line);border-radius:20px;padding:34px;box-shadow:0 30px 80px rgba(0,0,0,.6);transform:translateY(14px) scale(.98);transition:transform .35s var(--ease)}
+  .modal.open .modal-card{transform:none}
+  .modal-x{position:absolute;top:15px;right:17px;background:none;border:0;color:var(--muted);font-size:17px;cursor:pointer;padding:6px}
+  .modal-x:hover{color:var(--ink)}
+  .modal-k{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .modal-t{font-weight:800;letter-spacing:-.03em;font-size:26px;margin-bottom:22px}
+  .terms{list-style:none;display:flex;flex-direction:column;gap:14px}
+  .terms li{font-size:14px;line-height:1.55;color:#c3c8d0;padding-left:20px;position:relative}
+  .terms li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--faint)}
+  .terms li b{color:var(--ink);font-weight:700}
+  .modal-foot{margin-top:24px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+  .modal-foot a{color:var(--ink);border-bottom:1px solid var(--line)}
+
+  /* --- feature polish + animated vignettes --- */
+  .feat p b{color:var(--ink);font-weight:700}
+  .fvis{transition:border-color .35s var(--ease),transform .35s var(--ease),box-shadow .35s var(--ease)}
+  .fvis:hover{border-color:var(--line-2);transform:translateY(-4px);box-shadow:0 34px 70px -44px rgba(0,0,0,.85)}
+  .fvis::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(78% 60% at 50% 0%,rgba(255,255,255,.05),transparent 70%)}
+  .pbar i{animation:grow 3.6s var(--ease) infinite}
+  @keyframes grow{0%{width:6%}70%{width:74%}100%{width:74%}}
+  .amenu .row{transition:background .5s var(--ease),color .5s var(--ease)}
+  .subf .syncchip{position:absolute;top:14px;left:14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);border:1px solid var(--line);padding:4px 9px;border-radius:5px}
+  .subf .cap{transition:opacity .5s var(--ease)}
+  .gmock.speed i{animation:snap 3.6s var(--ease) infinite}
+  .gmock.speed i:nth-child(2){animation-delay:.08s}.gmock.speed i:nth-child(3){animation-delay:.16s}.gmock.speed i:nth-child(4){animation-delay:.24s}
+  .gmock.speed i:nth-child(5){animation-delay:.12s}.gmock.speed i:nth-child(6){animation-delay:.2s}.gmock.speed i:nth-child(7){animation-delay:.28s}.gmock.speed i:nth-child(8){animation-delay:.36s}
+  @keyframes snap{0%,100%{background:rgba(255,255,255,.05);transform:scale(.95)}20%,84%{background:rgba(255,255,255,.15);transform:scale(1)}}
+
+  /* hero depth + scroll cue */
+  .hero{position:relative}
+  .hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:120vw;height:72vh;pointer-events:none;z-index:-1;
+    background:radial-gradient(58% 50% at 50% 18%,rgba(255,255,255,.06),transparent 72%)}
+  .scrollcue{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);color:var(--faint);font-size:20px;animation:bob 2.2s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+
+  /* philosophy */
+  .philo{text-align:center;position:relative}
+  .philo .k{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted);margin-bottom:30px}
+  .philo .sm{font-weight:600;color:var(--faint);font-size:clamp(17px,2.2vw,24px);letter-spacing:-.02em;margin-bottom:20px}
+  .philo .lg{font-weight:800;letter-spacing:-.04em;line-height:1.1;font-size:clamp(30px,5.2vw,64px);max-width:17ch;margin:0 auto}
+  .philo .lg em{font-style:normal;color:var(--faint)}
+
+  /* fused-feature audio label + LITE gravity wheel */
+  .play-m .audlab{font-size:12px;color:var(--muted);letter-spacing:.02em}
+  .play-m .audlab span{color:var(--ink);font-weight:600;transition:opacity .35s var(--ease)}
+  .wheel{position:relative;width:100%;max-width:230px;height:176px;overflow:hidden;
+    -webkit-mask-image:linear-gradient(transparent,#000 26%,#000 74%,transparent);mask-image:linear-gradient(transparent,#000 26%,#000 74%,transparent)}
+  .wheel ul{list-style:none;margin:0;padding:0;animation:spin 8s linear infinite}
+  .wheel li{height:36px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);letter-spacing:-.01em;white-space:nowrap}
+  .wheel .wcenter{position:absolute;left:6px;right:6px;top:50%;transform:translateY(-50%);height:38px;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);pointer-events:none}
+  @keyframes spin{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+
+  @media (prefers-reduced-motion:reduce){
+    .h1{animation:none;opacity:1;-webkit-text-fill-color:var(--ink);-webkit-text-stroke:0}
+    .whats{animation:none}.rv{transition:none;opacity:1;transform:none}
+    .pbar i,.gmock.speed i,.scrollcue,.wheel ul{animation:none}
+  }
+</style>
+</head>
+<body>
+  <canvas id="grid"></canvas>
+  <div class="grain"></div>
+
+  <nav id="nav">
+    <div class="brand">Next<span class="sq"></span></div>
+    <div class="links">
+      <a href="#what">What it is</a>
+      <a href="#features">Features</a>
+      <a href="#fixed">What we fixed</a>
+      <a href="#install">Install</a>
+      <a class="pill" href="https://discord.gg/ak8hD7U3r" target="_blank" rel="noopener">Request access <span class="arw">→</span></a>
+    </div>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="eyebrow rv in">For Samsung &amp; LG · Founding access opens Sept 29</div>
+      <h1 class="h1">The streaming app your TV always deserved.</h1>
+      <p class="rv in d2">Sit down, press play, and it just works — the right stream, your language, your subtitles, in sync across every screen. No clutter. No fiddling. No phone app stretched onto a 60-inch panel.</p>
+      <div class="cta rv in d3">
+        <a class="btn-primary" href="https://discord.gg/ak8hD7U3r" target="_blank" rel="noopener">Request your seat <span class="arw">→</span></a>
+        <a class="ghost" href="#what">See what it does ↓</a>
+      </div>
+      <div class="scrollcue">↓</div>
+    </section>
+
+    <!-- WHAT IT IS -->
+    <section id="what" class="manifesto">
+      <div class="eyebrow rv" style="text-align:center;margin-bottom:26px">What it is</div>
+      <p class="rv d1">A streaming app built for the television — natively, for Samsung and LG. You bring your own service. <span class="dim">NextStream makes it feel effortless on the big screen: fast, quiet, and beautiful, the way the living room deserves.</span></p>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="sh">
+        <div class="eyebrow rv">Signature</div>
+        <h2 class="rv d1">Everything you wanted. Nothing you have to think about.</h2>
+      </div>
+
+      <div class="feat rv">
+        <div class="ftext"><div class="fnum">01</div><h3>One tap. Perfect stream, every time.</h3><p>Press play — the <b>Eagle Eye</b> engine does the choosing, and it just works. Prefer a second language? Turn it on, and everything plays in that language, every time. Eagle Eye quietly segregates streams around what you like.</p></div>
+        <div class="fvis"><div class="play-m"><div class="play-btn"><svg viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg></div><div class="pbar"><i></i></div><div class="audlab">Audio · <span id="audlang">English</span></div></div></div>
+      </div>
+
+      <div class="feat flip rv">
+        <div class="ftext"><div class="fnum">02</div><h3>Subtitles that show up.</h3><p>Embedded subtitles render cleanly on Samsung, where most apps quietly give up. And for external SRTs we built our own sync tool — nudge any subtitle into place in seconds and it stays locked to the picture.</p></div>
+        <div class="fvis"><div class="subf"><span class="syncchip">Subtitle sync</span><span class="cap" id="subcap">— Perfectly in sync.</span></div></div>
+      </div>
+
+      <div class="feat rv">
+        <div class="ftext"><div class="fnum">03</div><h3>Your world, on every screen.</h3><p>Sign in once with your phone — no keyboard on the TV, ever. <b>WatchSync</b> carries your profiles, watchlist, and progress to every screen you own. Import and export with Stremio and Nuvio too — one hub for your history, across every TV and every app.</p></div>
+        <div class="fvis"><div class="sync-m">
+          <div class="qr"><svg viewBox="0 0 100 100" fill="#000"><rect x="0" y="0" width="28" height="28"/><rect x="8" y="8" width="12" height="12" fill="#fff"/><rect x="72" y="0" width="28" height="28"/><rect x="80" y="8" width="12" height="12" fill="#fff"/><rect x="0" y="72" width="28" height="28"/><rect x="8" y="80" width="12" height="12" fill="#fff"/><rect x="40" y="8" width="8" height="8"/><rect x="56" y="16" width="8" height="8"/><rect x="40" y="40" width="8" height="8"/><rect x="60" y="44" width="8" height="8"/><rect x="44" y="64" width="8" height="8"/><rect x="72" y="56" width="8" height="8"/><rect x="88" y="72" width="8" height="8"/><rect x="64" y="88" width="8" height="8"/></svg></div>
+          <div class="to">→</div>
+          <div class="scrs"><div class="scr"><span class="dot"></span>Living room</div><div class="scr"><span class="dot"></span>Bedroom</div><div class="scr"><span class="dot"></span>In sync</div></div>
+        </div></div>
+      </div>
+
+      <div class="feat flip rv">
+        <div class="ftext"><div class="fnum">04</div><h3>The LITE engine. Buttery smooth.</h3><p>This is the part you feel. Our <b>LITE engine</b> makes every screen glide — the gravity-wheel catalogue spins under your thumb with zero lag, home and search appear the instant you land, and it holds full performance parity with the apps you already love, on TV hardware that usually stutters.</p></div>
+        <div class="fvis"><div class="wheel"><ul id="wheelist"><li>Continue watching</li><li>Trending now</li><li>For you</li><li>New releases</li><li>Your list</li><li>Anime</li><li>Documentaries</li><li>Live TV</li><li>Continue watching</li><li>Trending now</li><li>For you</li><li>New releases</li><li>Your list</li><li>Anime</li><li>Documentaries</li><li>Live TV</li></ul><div class="wcenter"></div></div></div>
+      </div>
+
+      <div class="feat rv">
+        <div class="ftext"><div class="fnum">05</div><h3>Who's watching.</h3><p>Real profiles for everyone at home. Pick yours, and the whole app becomes yours.</p></div>
+        <div class="fvis"><div class="prow">
+          <div class="p"><div class="a sel"></div><div class="n">Nimit</div></div>
+          <div class="p"><div class="a"></div><div class="n">Aisha</div></div>
+          <div class="p"><div class="a"></div><div class="n">Kabir</div></div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- WHAT WE FIXED -->
+    <section id="fixed">
+      <div class="sh">
+        <div class="eyebrow rv">What we fixed</div>
+        <h2 class="rv d1">The things that break on other TV apps. Gone.</h2>
+        <p class="rv d2">Everyone who's used a streaming app on a smart TV knows the list. We started from that list.</p>
+      </div>
+      <div class="fixed-list">
+        <div class="frow rv"><div class="bad">Buffers until you give up</div><div class="arr">→</div><div class="good">Starts fast. Stays smooth.</div></div>
+        <div class="frow rv"><div class="bad">Audio stuck on the wrong language</div><div class="arr">→</div><div class="good">Always the right track, in your language.</div></div>
+        <div class="frow rv"><div class="bad">Subtitles missing or drifting out of sync</div><div class="arr">→</div><div class="good">Embedded and external, on time, every time.</div></div>
+        <div class="frow rv"><div class="bad">LG that won't even let you pick the audio</div><div class="arr">→</div><div class="good">Full control on webOS, not just Samsung.</div></div>
+        <div class="frow rv"><div class="bad">A phone app stretched to fit</div><div class="arr">→</div><div class="good">Designed for the big screen from the first pixel.</div></div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section id="install">
+      <div class="sh">
+        <div class="eyebrow rv">Get it on your TV</div>
+        <h2 class="rv d1">Install once. Never sideload twice.</h2>
+        <p class="rv d2">Set it up one time and every update after that arrives on its own.</p>
+      </div>
+      <div class="platchips rv"><span class="chip">Samsung · Tizen</span><span class="chip">LG · webOS</span></div>
+      <div class="steps">
+        <div class="step rv"><div class="n"><span>1</span>Join</div><h4>Get the one-time setup.</h4><p>Hop into the Discord and grab the installer — it's a single small download.</p></div>
+        <div class="step rv d1"><div class="n"><span>2</span>Run it once</div><h4>It sets up your TV for you.</h4><p>Run the installer once and it puts NextStream on your Samsung or LG. No tinkering.</p></div>
+        <div class="step rv d2"><div class="n"><span>3</span>Sign in</div><h4>Scan a QR. Done.</h4><p>Point your phone at the code on screen and you're in — no typing on the TV, ever.</p></div>
+      </div>
+      <div class="note rv">The full, screenshot-by-screenshot guide lives in the Discord.</div>
+    </section>
+
+    <!-- SYNC -->
+    <section id="sync" class="manifesto">
+      <div class="eyebrow rv" style="text-align:center;margin-bottom:22px">WatchSync</div>
+      <p class="rv d1">Sign in once. <span class="dim">Never type on your TV again. Scan a QR on your phone and NextStream links to your account in seconds — profiles, watchlist, and progress riding along to every screen. Start in the bedroom, finish in the lounge, right where you left off.</span></p>
+    </section>
+
+    <!-- PHILOSOPHY -->
+    <section class="philo">
+      <div class="k rv">The philosophy</div>
+      <p class="sm rv d1">Somewhere along the way, streaming apps became endless catalogs to get lost in.</p>
+      <p class="lg rv d2">We think beautiful means <em>less.</em> Fewer menus, even fewer decisions — so you get back to the fun part: picking what to watch.</p>
+    </section>
+
+    <!-- FOUNDING CTA -->
+    <section class="founding">
+      <div class="whats rv in">What's Next<span class="sq"></span>?</div>
+      <p class="line rv d1">Fifty founding seats. The doors open September 29.</p>
+      <div class="count rv d2">
+        <div class="u"><span class="v" id="cd-d">--</span><span class="l">Days</span></div>
+        <div class="u"><span class="v" id="cd-h">--</span><span class="l">Hours</span></div>
+        <div class="u"><span class="v" id="cd-m">--</span><span class="l">Min</span></div>
+        <div class="u"><span class="v" id="cd-s">--</span><span class="l">Sec</span></div>
+      </div>
+      <div class="cta rv d3"><a class="btn-primary" href="https://discord.gg/ak8hD7U3r" target="_blank" rel="noopener">Request your seat <span class="arw">→</span></a></div>
+      <div><button class="terms-open" id="terms-open" type="button">Invitation only</button></div>
+    </section>
+
+  </div>
+
+  <footer>
+    <div class="big rv">Made for people who just want the simplicity of one-tap play.</div>
+    <div class="frow2 rv d1">
+      <a href="https://discord.gg/ak8hD7U3r" target="_blank" rel="noopener">Discord</a>
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <button class="terms-open" id="terms-open-2" type="button" style="letter-spacing:0;text-transform:none;font-size:13px;color:var(--muted)">Terms</button>
+    </div>
+    <p class="disc rv d2">NextStream hosts no media and ships no sources. It's a player for services you connect and have the right to use. Sideloading is your own choice — follow the terms and the laws where you live.</p>
+    <div class="mk rv d2">Next<span class="sq"></span></div>
+  </footer>
+
+  <!-- terms modal -->
+  <div class="modal" id="terms" aria-hidden="true">
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Terms">
+      <button class="modal-x" data-close type="button" aria-label="Close">✕</button>
+      <div class="modal-k">The fine print</div>
+      <h2 class="modal-t">Invitation only.</h2>
+      <ul class="terms">
+        <li><b>Access opens September 29, 2026</b> to a limited founding group, at our discretion.</li>
+        <li><b>Fifty seats.</b> Founding membership is capped at fifty. Once they're claimed, the door closes.</li>
+        <li><b>Founder terms.</b> Your founding rate holds for as long as your membership stays active. Seats are personal &mdash; they can't be sold, traded, or gifted.</li>
+        <li><b>Still growing.</b> NextStream is evolving; features and availability may change over time.</li>
+        <li><b>For your living room.</b> NextStream is for personal use, not redistribution.</li>
+      </ul>
+      <div class="modal-foot">Questions? <a href="https://discord.gg/ak8hD7U3r" target="_blank" rel="noopener">Find us on Discord.</a></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  var reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+  /* nav blur on scroll */
+  var nav=document.getElementById("nav");
+  function onScroll(){ nav.classList.toggle("scrolled", window.scrollY>20); }
+  onScroll(); window.addEventListener("scroll",onScroll,{passive:true});
+
+  /* scroll reveal */
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}});},{threshold:.14});
+  document.querySelectorAll(".rv:not(.in)").forEach(function(el){io.observe(el);});
+
+  /* countdown */
+  var target=Date.parse("2026-09-29T00:00:00+05:30");
+  function pad(n){return(n<10?"0":"")+n;}
+  function tick(){var d=Math.max(0,target-Date.now());
+    document.getElementById("cd-d").textContent=Math.floor(d/86400000);
+    document.getElementById("cd-h").textContent=pad(Math.floor(d%86400000/3600000));
+    document.getElementById("cd-m").textContent=pad(Math.floor(d%3600000/60000));
+    document.getElementById("cd-s").textContent=pad(Math.floor(d%60000/1000));}
+  tick(); setInterval(tick,1000);
+
+  /* ambient dot-grid ripple that follows the cursor */
+  var cv=document.getElementById("grid"),ctx=cv.getContext("2d");
+  var W,H,DPR,cx,cy,tcx,tcy,maxR,dots=[],GAP=42,R=1.3;
+  function build(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+    cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+"px";cv.style.height=H+"px";ctx.setTransform(DPR,0,0,DPR,0,0);
+    if(cx===undefined){cx=W/2;cy=H*0.4;} if(tcx===undefined){tcx=W/2;tcy=H*0.4;}
+    maxR=Math.hypot(W,H);dots.length=0;
+    for(var y=GAP/2;y<H;y+=GAP){for(var x=GAP/2;x<W;x+=GAP){dots.push({x:x,y:y});}}}
+  build(); addEventListener("resize",build,{passive:true});
+  if(matchMedia("(pointer:fine)").matches){
+    addEventListener("pointermove",function(e){tcx=e.clientX;tcy=e.clientY;},{passive:true});
+    addEventListener("pointerout",function(){tcx=W/2;tcy=H*0.4;},{passive:true});}
+  var CYCLE=5600,RING=150,BASE=0.06,PEAK=0.5,start=performance.now();
+  function frame(now){
+    if(document.hidden){requestAnimationFrame(frame);return;}
+    cx+=(tcx-cx)*0.04;cy+=(tcy-cy)*0.04;ctx.clearRect(0,0,W,H);
+    var t=(now-start)%CYCLE,f1=t/CYCLE*maxR,t2=(t+CYCLE/2)%CYCLE,f2=t2/CYCLE*maxR;
+    for(var i=0;i<dots.length;i++){var dt=dots[i],dx=dt.x-cx,dy=dt.y-cy,d=Math.sqrt(dx*dx+dy*dy);
+      var p1=1-Math.min(Math.abs(d-f1)/RING,1),p2=1-Math.min(Math.abs(d-f2)/RING,1);
+      var g=Math.max(p1,p2);g=g*g;var a=BASE+g*PEAK;
+      ctx.fillStyle="rgba(244,246,248,"+a.toFixed(3)+")";ctx.beginPath();ctx.arc(dt.x,dt.y,R+g*1.1,0,6.2832);ctx.fill();}
+    requestAnimationFrame(frame);}
+  if(reduce){for(var i=0;i<dots.length;i++){var dt=dots[i];ctx.fillStyle="rgba(244,246,248,0.07)";ctx.beginPath();ctx.arc(dt.x,dt.y,R,0,6.2832);ctx.fill();}}
+  else{requestAnimationFrame(frame);}
+
+  /* animated feature vignettes */
+  if(!reduce){
+    var al=document.getElementById("audlang");
+    if(al){var langs=["English","Español","Français","日本語","हिन्दी"],li=0;
+      setInterval(function(){al.style.opacity="0";setTimeout(function(){li=(li+1)%langs.length;al.textContent=langs[li];al.style.opacity="1";},350);},2100);}
+    var cap=document.getElementById("subcap");
+    if(cap){var lines=["— Perfectly in sync.","— Every word, on time.","— Even the tricky SRTs."],ci=0;
+      setInterval(function(){cap.style.opacity="0";setTimeout(function(){ci=(ci+1)%lines.length;cap.textContent=lines[ci];cap.style.opacity="1";},500);},2900);}
+  }
+
+  /* terms modal */
+  var modal=document.getElementById("terms");
+  function openM(){modal.classList.add("open");modal.setAttribute("aria-hidden","false");}
+  function closeM(){modal.classList.remove("open");modal.setAttribute("aria-hidden","true");}
+  ["terms-open","terms-open-2"].forEach(function(id){var b=document.getElementById(id);if(b)b.addEventListener("click",openM);});
+  modal.addEventListener("click",function(e){if(e.target.hasAttribute("data-close"))closeM();});
+  addEventListener("keydown",function(e){if(e.key==="Escape")closeM();});
+})();
+</script>
+</body>
+</html>
