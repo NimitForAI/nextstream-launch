@@ -137,22 +137,13 @@
     </header>
 
     <main>
-      <div class="kicker up d2">Fifty founding seats</div>
-
       <h1 class="hero">
         <span class="row"><span>What's</span></span>
         <span class="row"><span>Next<i class="hdot"></i>?</span></span>
       </h1>
 
       <div class="rule ruleIn"></div>
-      <div class="date up d3">September 29 · 2026</div>
-
-      <div class="count up d4" id="count">
-        <div class="u"><span class="n" id="cd-d">--</span><span class="l">Days</span></div>
-        <div class="u"><span class="n" id="cd-h">--</span><span class="l">Hours</span></div>
-        <div class="u"><span class="n" id="cd-m">--</span><span class="l">Minutes</span></div>
-        <div class="u"><span class="n" id="cd-s">--</span><span class="l">Seconds</span></div>
-      </div>
+      <div class="date up d3">Coming soon</div>
 
       <div class="cta up d5">
         <a class="door" href="https://discord.gg/ak8hD7U3r" target="_blank" rel="noopener" id="discord"><span>Request your seat</span><span class="arrow">→</span></a>
@@ -168,7 +159,7 @@
       <div class="modal-kicker">The fine print</div>
       <h2 class="modal-title">Invitation only.</h2>
       <ul class="terms">
-        <li><b>Access opens September 29, 2026</b> to a limited founding group, at our discretion.</li>
+        <li><b>Access opens to a limited founding group</b> when we're ready, at our discretion.</li>
         <li><b>Fifty seats.</b> Founding membership is capped at fifty. Once they're claimed, the door closes.</li>
         <li><b>Founder terms.</b> Your founding rate holds for as long as your membership stays active. Seats are personal &mdash; they can't be sold, traded, or gifted.</li>
         <li><b>Still growing.</b> NextStream is evolving; features, availability, and pricing may change over time.</li>
@@ -181,22 +172,6 @@
 <script>
 (function(){
   var reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
-
-  /* ---- countdown ---- */
-  var target = Date.parse("2026-09-29T00:00:00+05:30");
-  function pad(n){return (n<10?"0":"")+n;}
-  function tick(){
-    var diff = Math.max(0, target - Date.now());
-    // At launch, reload once so the edge gate swaps this page for the full site.
-    if (target - Date.now() <= 0 && !sessionStorage.getItem("ns_launched")){
-      sessionStorage.setItem("ns_launched","1"); location.reload(); return;
-    }
-    document.getElementById("cd-d").textContent = Math.floor(diff/86400000);
-    document.getElementById("cd-h").textContent = pad(Math.floor(diff%86400000/3600000));
-    document.getElementById("cd-m").textContent = pad(Math.floor(diff%3600000/60000));
-    document.getElementById("cd-s").textContent = pad(Math.floor(diff%60000/1000));
-  }
-  tick(); setInterval(tick,1000);
 
   /* ---- dot-grid with an expanding brightness wave (the ripple, in the grid) ---- */
   var cv = document.getElementById("grid"), ctx = cv.getContext("2d");
