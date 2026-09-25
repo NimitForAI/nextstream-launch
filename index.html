@@ -68,6 +68,7 @@
   @keyframes glow{0%,100%{filter:drop-shadow(0 0 0 rgba(244,246,248,0))}50%{filter:drop-shadow(0 6px 34px rgba(244,246,248,.14))}}
   .hero p{margin:28px auto 0;max-width:600px;font-size:clamp(16px,1.5vw,19px);color:#c3c8d0}
   .hero .cta{margin-top:40px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .hero-early{margin-top:18px;font-size:12px;letter-spacing:.08em;color:var(--muted)}
   .ghost{padding:15px 26px;border-radius:100px;border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--ink);
     transition:border-color .25s var(--ease),transform .2s var(--ease)}
   .ghost:hover{border-color:var(--ink);transform:translateY(-2px)}
@@ -282,13 +283,14 @@
 
     <!-- HERO -->
     <section class="hero">
-      <div class="eyebrow rv in">For Samsung &amp; LG · Founding access opens Sept 29</div>
+      <div class="eyebrow rv in">For Samsung &amp; LG · Public opening September 29</div>
       <h1 class="h1">The streaming app your TV always deserved.</h1>
       <p class="rv in d2">Sit down, press play, and it just works — the right stream, your language, your subtitles, in sync across every screen. No clutter. No fiddling. No phone app stretched onto a 60-inch panel.</p>
       <div class="cta rv in d3">
         <a class="btn-primary" href="https://discord.gg/ak8hD7U3r" target="_blank" rel="noopener">Request your seat <span class="arw">→</span></a>
         <a class="ghost" href="#what">See what it does ↓</a>
       </div>
+      <div class="hero-early rv in d3">Founding seats open now. Limited to fifty.</div>
       <div class="scrollcue">↓</div>
     </section>
 
@@ -387,8 +389,8 @@
     <!-- FOUNDING CTA -->
     <section class="founding">
       <div class="whats rv in">What's Next<span class="sq"></span>?</div>
-      <p class="line rv d1">Fifty founding seats. The doors open September 29.</p>
-      <div class="count rv d2">
+      <p class="line rv d1">Fifty founding seats, open now. Public opening September 29.</p>
+      <div class="count rv d2" role="timer" aria-label="Countdown to the public opening on September 29, 2026">
         <div class="u"><span class="v" id="cd-d">--</span><span class="l">Days</span></div>
         <div class="u"><span class="v" id="cd-h">--</span><span class="l">Hours</span></div>
         <div class="u"><span class="v" id="cd-m">--</span><span class="l">Min</span></div>
@@ -420,8 +422,8 @@
       <div class="modal-k">The fine print</div>
       <h2 class="modal-t">Invitation only.</h2>
       <ul class="terms">
-        <li><b>Access opens September 29, 2026</b> to a limited founding group, at our discretion.</li>
-        <li><b>Fifty seats.</b> Founding membership is capped at fifty. Once they're claimed, the door closes.</li>
+        <li><b>Founding access is open now</b> to a limited group, at our discretion. The public opening is September 29, 2026.</li>
+        <li><b>Fifty seats.</b> Founding membership is capped at fifty. Once they're claimed, founding access closes.</li>
         <li><b>Founder terms.</b> Your founding rate holds for as long as your membership stays active. Seats are personal &mdash; they can't be sold, traded, or gifted.</li>
         <li><b>Still growing.</b> NextStream is evolving; features and availability may change over time.</li>
         <li><b>For your living room.</b> NextStream is for personal use, not redistribution.</li>
